@@ -1,5 +1,6 @@
 # Personal AI OS
 
+[Alle öffentlichen Arbeitsproben im Überblick](https://github.com/adrienwottke-stack/engine-playground/blob/main/PORTFOLIO.md)
 Persönlicher Arbeitsraum für Akquise, Projekte, Lernen und ausgewähltes Wissen mit Freigaben für externe Aktionen.
 
 ## Projekt und Beitrag
