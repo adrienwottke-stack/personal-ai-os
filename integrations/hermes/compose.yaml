@@ -1,0 +1,19 @@
+name: personal-assistant
+services:
+  hermes:
+    image: nousresearch/hermes-agent@sha256:9774f4f39a9bb8c2f68ce728ed5e99ddbad282163be56764afacf88ed952b784
+    container_name: personal-assistant-hermes
+    restart: unless-stopped
+    env_file: [.env]
+    volumes: ["./state:/opt/data"]
+    command: [gateway, run]
+    mem_limit: 512m
+    cpus: 0.35
+    pids_limit: 160
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    cap_add: [CHOWN, SETUID, SETGID, DAC_OVERRIDE, FOWNER]
+    networks: [bridge]
+networks:
+  bridge:
+    name: personal-assistant_bridge

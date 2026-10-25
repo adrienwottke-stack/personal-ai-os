@@ -1,0 +1,12 @@
+node_modules
+generated
+.next
+.git
+.data
+private
+*.log
+*.tgz
+.env*
+tests
+work
+*.tsbuildinfo

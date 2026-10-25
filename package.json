@@ -1,0 +1,51 @@
+{
+  "name": "personal-ai-os",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "build": "prisma generate && next build --webpack",
+    "start": "node scripts/start-local.mjs",
+    "check": "tsc --noEmit",
+    "assets:generate": "node scripts/generate-app-assets.mjs",
+    "test": "tsx --test --test-concurrency=1 tests/*.test.ts",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate deploy",
+    "db:seed": "tsx scripts/seed.ts",
+    "worker": "tsx scripts/worker.ts",
+    "worker:once": "tsx scripts/worker.ts --once",
+    "backup": "tsx scripts/backup.ts",
+    "backup:restore": "tsx scripts/restore.ts",
+    "obsidian:sync": "tsx scripts/obsidian-sync.ts",
+    "preflight": "tsx scripts/preflight.ts"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "0.5.8",
+    "@fontsource/ibm-plex-sans": "5.2.8",
+    "@fontsource/manrope": "5.2.8",
+    "@prisma/adapter-pg": "7.10.0",
+    "@prisma/client": "7.10.0",
+    "dotenv": "17.2.3",
+    "lucide-react": "^0.562.0",
+    "next": "16.4.0",
+    "pg": "^8.16.3",
+    "pglite-prisma-adapter": "0.7.2",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/pg": "^8.15.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "prisma": "7.10.0",
+    "qrcode": "1.5.4",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0"
+  }
+}

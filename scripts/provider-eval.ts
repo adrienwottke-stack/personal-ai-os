@@ -1,0 +1,9 @@
+import 'dotenv/config';
+import { mkdir,writeFile } from 'node:fs/promises';
+import { db } from '../lib/db';import { seedEvalCases } from '../lib/demo';import { startEval } from '../lib/evals';import { workOnce } from '../lib/jobs';import { object } from '../lib/util';
+if(!process.argv.includes('--confirmed-subscription-check'))throw new Error('Explicit subscription validation flag required.');
+process.env.APP_MODE='demo';process.env.DATA_DIR='.data/provider-validation';process.env.AI_ENABLED='true';
+const client=await db();await seedEvalCases(client);const run=await startEval(client,'Abnahmefälle · tatsächlicher Codex-Lauf','provider','holdout','local-validation');
+let executed=0;while(executed<10){const result=await workOnce(client);console.log(JSON.stringify(result));if(result.status!=='completed')break;executed++;}
+const actual=await client.evalRun.findUniqueOrThrow({where:{id:run.id}});const jobs=await client.job.findMany({where:{dedupeKey:{startsWith:`eval:${run.id}:`}},select:{id:true,status:true,model:true,reasoning:true,errorCode:true,durationMs:true,usage:true}});const checks=object<any[]>(actual.results);const passed=checks.reduce((n,r)=>n+r.passed,0),total=checks.reduce((n,r)=>n+r.total,0),criticalErrors=checks.reduce((n,r)=>n+r.criticalErrors,0);
+const report={at:new Date().toISOString(),mode:'actual-codex-subscription',dataset:actual.datasetVersion,promptVersion:actual.promptVersion,model:actual.model,runId:actual.id,status:actual.status,caseCount:checks.length,passedChecks:passed,totalChecks:total,criticalErrors,jobs,limits:'Synthetic cases; extraction and source contract checks, no general capability estimate.'};await mkdir('docs/proof',{recursive:true});await writeFile('docs/proof/provider-eval.json',JSON.stringify(report,null,2));console.log(JSON.stringify(report));await client.$disconnect();process.exit(0);

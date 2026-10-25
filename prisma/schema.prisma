@@ -1,0 +1,383 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Profile {
+  id        String   @id @default(uuid())
+  version   Int      @unique
+  name      String
+  claims    Json
+  skills    Json
+  availability String?
+  minimumRate String?
+  confirmed Boolean @default(false)
+  createdAt DateTime @default(now())
+}
+
+model SourceEvent {
+  id        String   @id @default(uuid())
+  externalId String  @unique
+  kind      String
+  url       String?
+  contentHash String
+  content   String
+  opportunityId String?
+  receivedAt DateTime @default(now())
+}
+
+model Opportunity {
+  id        String   @id @default(uuid())
+  fingerprint String @unique
+  title     String
+  company   String?
+  url       String?
+  content   String
+  contentHash String
+  sourceKind String
+  stage     String   @default("new")
+  submissionProof String?
+  submittedAt DateTime?
+  deadline  DateTime?
+  analysisId String?
+  starred   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Analysis {
+  id        String   @id @default(uuid())
+  opportunityId String
+  profileId String
+  contentHash String
+  result    Json
+  jobId     String? @unique
+  createdAt DateTime @default(now())
+  @@index([opportunityId, createdAt])
+}
+
+model Attachment {
+  id        String   @id @default(uuid())
+  name      String
+  mimeType  String
+  size      Int
+  hash      String
+  storageKey String @unique
+  createdAt DateTime @default(now())
+}
+
+model Draft {
+  id        String   @id @default(uuid())
+  opportunityId String
+  revision  Int
+  kind      String @default("application")
+  recipient String?
+  subject   String
+  body      String
+  attachmentIds Json
+  references Json
+  warnings  Json
+  profileId String
+  contentHash String
+  threadId  String?
+  threadRevision String?
+  createdAt DateTime @default(now())
+  @@unique([opportunityId, revision])
+}
+
+model Outbox {
+  id        String   @id @default(uuid())
+  draftId   String   @unique
+  idempotencyKey String @unique
+  snapshotHash String
+  snapshot  Json
+  status    String @default("approved")
+  approvedBy String
+  approvedAt DateTime @default(now())
+  attemptedAt DateTime?
+  providerMessageId String? @unique
+  providerThreadId String?
+  receipt   Json?
+  errorCode String?
+  verifiedAt DateTime?
+  updatedAt DateTime @updatedAt
+}
+
+model MailThread {
+  id        String   @id @default(uuid())
+  providerId String @unique
+  opportunityId String?
+  revision  String
+  latestMessageId String
+  latestAt  DateTime
+  direction String
+  classification String @default("normal")
+  messages  Json
+  updatedAt DateTime @updatedAt
+}
+
+model Project {
+  id        String   @id @default(uuid())
+  opportunityId String? @unique
+  title     String
+  problem   String
+  inputs    String
+  outcome   String
+  acceptance String
+  questions String
+  repository String?
+  stage     String @default("active")
+  acceptedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Task {
+  id        String   @id @default(uuid())
+  dedupeKey String? @unique
+  title     String
+  kind      String
+  projectId String?
+  opportunityId String?
+  learningId String?
+  dueAt     DateTime?
+  status    String @default("open")
+  notes     String?
+  createdAt DateTime @default(now())
+}
+
+model Evidence {
+  id        String   @id @default(uuid())
+  projectId String
+  title     String
+  content   String
+  repository String?
+  commitSha String?
+  checkedScope String
+  origin    String
+  confirmed Boolean @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Learning {
+  id        String   @id @default(uuid())
+  evidenceId String
+  title     String
+  concept   String
+  exercise  String
+  transferQuestion String
+  level     String @default("seen")
+  confirmed Boolean @default(false)
+  createdAt DateTime @default(now())
+}
+
+model LearningSession {
+  id        String   @id @default(uuid())
+  learningId String
+  answer    String
+  help      String
+  hintsUsed Json @default("[]")
+  result    String
+  minutes   Int
+  transfer  Boolean @default(false)
+  reviewed  Boolean @default(false)
+  createdAt DateTime @default(now())
+}
+
+model DayReview {
+  id String @id @default(uuid())
+  day String @unique
+  maintenanceMinutes Int
+  savedMinutes Int
+  usefulStep String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Document {
+  id        String   @id @default(uuid())
+  title     String
+  content   String
+  source    String
+  projectId String?
+  hash      String
+  approved  Boolean @default(false)
+  state     String @default("current")
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+}
+
+model ContentPackage {
+  id        String   @id @default(uuid())
+  projectId String
+  evidenceIds Json
+  result    Json
+  version   Int @default(1)
+  publishedUrl String?
+  createdAt DateTime @default(now())
+}
+
+model Publication {
+  id        String   @id @default(uuid())
+  contentPackageId String
+  slug      String @unique
+  snapshot  Json
+  hash      String
+  approvedBy String
+  approvedAt DateTime @default(now())
+  active    Boolean @default(true)
+}
+
+model TimeEntry {
+  id        String   @id @default(uuid())
+  projectId String?
+  opportunityId String?
+  category  String
+  minutes   Int
+  note      String
+  occurredAt DateTime @default(now())
+}
+
+model Payment {
+  id        String   @id @default(uuid())
+  projectId String
+  amountCents Int
+  currency  String @default("EUR")
+  paidAt    DateTime
+  note      String
+}
+
+model Job {
+  id        String   @id @default(uuid())
+  dedupeKey String @unique
+  kind      String
+  input     Json
+  status    String @default("queued")
+  model     String
+  reasoning String
+  promptVersion String
+  schemaVersion String
+  profileId String?
+  result    Json?
+  usage     Json?
+  errorCode String?
+  startedAt DateTime?
+  completedAt DateTime?
+  durationMs Int?
+  createdAt DateTime @default(now())
+  @@index([status, createdAt])
+}
+
+model RuntimeState {
+  id        String   @id @default("singleton")
+  pausedReason String?
+  activeJobId String?
+  activeSince DateTime?
+  quotaDay  String @default("")
+  quotaCount Int @default(0)
+  updatedAt DateTime @updatedAt
+}
+
+model EvalCase {
+  id        String   @id
+  title     String
+  split     String
+  input     Json
+  expected  Json
+  version   String
+  reviewed  Boolean @default(false)
+}
+
+model EvalRun {
+  id        String   @id @default(uuid())
+  title     String
+  datasetVersion String
+  model     String
+  reasoning String
+  promptVersion String
+  mode      String
+  configHash String
+  results   Json
+  status    String @default("queued")
+  createdAt DateTime @default(now())
+  completedAt DateTime?
+}
+
+model Integration {
+  id        String   @id
+  status    String
+  sealed    String?
+  scopes    Json
+  detail    String?
+  checkedAt DateTime @default(now())
+}
+
+model Audit {
+  id        String   @id @default(uuid())
+  kind      String
+  entityId  String?
+  detail    Json
+  actor     String
+  createdAt DateTime @default(now())
+  @@index([createdAt])
+}
+
+model Backup {
+  id        String   @id @default(uuid())
+  file      String
+  hash      String
+  size      Int
+  verifiedAt DateTime?
+  offsiteAt DateTime?
+  createdAt DateTime @default(now())
+}
+
+model MealEntry {
+  id String @id @default(uuid())
+  externalId String @unique
+  day String
+  description String
+  calories Float
+  protein Float
+  carbs Float?
+  fat Float?
+  estimated Boolean @default(true)
+  quantities String?
+  revision Int @default(1)
+  deletedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([day, deletedAt])
+}
+
+model PersonalSettings {
+  id String @id @default("singleton")
+  calorieTarget Int?
+  proteinTarget Float?
+  autoAnalyze Boolean @default(true)
+  autoDraft Boolean @default(true)
+  calendarIds Json
+  updatedAt DateTime @updatedAt
+}
+
+model DailyBriefing {
+  id String @id @default(uuid())
+  day String @unique
+  snapshot Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AssistantTurn {
+  id String @id
+  message String
+  response String?
+  status String @default("running")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([createdAt])
+}

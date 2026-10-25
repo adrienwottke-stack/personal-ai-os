@@ -1,0 +1,3 @@
+import {db} from '../lib/db';import {writeFile} from 'node:fs/promises';
+process.env.APP_MODE='demo';process.env.DATA_DIR='.data/provider-validation';
+const client=await db();const jobs=await client.job.findMany({where:{model:{not:'example-fixture'}}});const runs=await client.evalRun.findMany({where:{mode:'provider'}});const runtime=await client.runtimeState.findUniqueOrThrow({where:{id:'singleton'}});await writeFile('docs/proof/validation-import.json',JSON.stringify({at:new Date().toISOString(),kind:'synthetic-local-codex-validation',runtime:{quotaDay:runtime.quotaDay,quotaCount:runtime.quotaCount},jobs,runs},null,2));console.log(JSON.stringify({jobs:jobs.length,runs:runs.length,callsToday:runtime.quotaCount}));await client.$disconnect();process.exit(0);

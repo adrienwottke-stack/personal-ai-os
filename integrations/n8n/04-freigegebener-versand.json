@@ -1,0 +1,81 @@
+{
+  "id": "personalAiOsApprovedDispatch",
+  "name": "Personal AI OS · Freigegebener Versand",
+  "active": false,
+  "nodes": [
+    {
+      "id": "e9b54abb-0376-4a4e-9ae1-42724c629bf2",
+      "name": "Geprüfter Sendeauftrag",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "3242b551-387e-495b-b358-267dd12262cf",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_OS_WEBHOOK_CREDENTIAL_ID",
+          "name": "Personal AI OS · Dispatch"
+        }
+      },
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "personal-ai-os-approved-dispatch",
+        "authentication": "headerAuth",
+        "responseMode": "lastNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "466e0439-80ff-4399-a0b0-83f1d5b30969",
+      "name": "Aktuelle Freigabe prüfen und transportieren",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        320,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_OS_API_CREDENTIAL_ID",
+          "name": "Personal AI OS · API"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "REPLACE_PRIVATE_OS_URL/api/integrations/outbox/dispatch",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({outboxId: $json.body.outboxId}) }}",
+        "options": {
+          "timeout": 120000
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Geprüfter Sendeauftrag": {
+      "main": [
+        [
+          {
+            "node": "Aktuelle Freigabe prüfen und transportieren",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Berlin",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveManualExecutions": false
+  },
+  "pinData": {},
+  "tags": []
+}

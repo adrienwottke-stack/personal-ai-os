@@ -1,0 +1,14 @@
+import { randomUUID } from 'node:crypto';import {mkdir,writeFile} from 'node:fs/promises';
+await mkdir('integrations/n8n',{recursive:true});
+const apiCredential={httpHeaderAuth:{id:'REPLACE_OS_API_CREDENTIAL_ID',name:'Personal AI OS · API'}};
+const webhookCredential={httpHeaderAuth:{id:'REPLACE_OS_WEBHOOK_CREDENTIAL_ID',name:'Personal AI OS · Dispatch'}};
+function http(name,path,body='{}'){return {id:randomUUID(),name,type:'n8n-nodes-base.httpRequest',typeVersion:4.2,position:[320,0],credentials:apiCredential,parameters:{method:'POST',url:`REPLACE_PRIVATE_OS_URL/api/integrations/${path}`,authentication:'genericCredentialType',genericAuthType:'httpHeaderAuth',sendBody:true,specifyBody:'json',jsonBody:body,options:{timeout:120000}}};}
+async function schedule(file,name,minutes,path){const trigger={id:randomUUID(),name:'Zeitplan',type:'n8n-nodes-base.scheduleTrigger',typeVersion:1.2,position:[0,0],parameters:{rule:{interval:[{field:'minutes',minutesInterval:minutes}]}}};const request=http('OS-Aufgabe auslösen',path);const workflow={id:`personalAiOs${file.replaceAll('-','')}`,name:`Personal AI OS · ${name}`,active:false,nodes:[trigger,request],connections:{Zeitplan:{main:[[{node:request.name,type:'main',index:0}]]}},settings:{executionOrder:'v1',timezone:'Europe/Berlin',saveDataSuccessExecution:'none',saveDataErrorExecution:'none',saveManualExecutions:false},pinData:{},tags:[]};await writeFile(`integrations/n8n/${file}.json`,JSON.stringify(workflow,null,2));}
+await schedule('01-projektalarme','Projektalarme · 15 Minuten',15,'gmail/sync');
+await schedule('02-gespraeche','Gespräche · 5 Minuten',5,'threads/sync');
+await schedule('03-tagesvorbereitung','Tagesvorbereitung und Freitagreview',15,'schedule/tick');
+await schedule('05-morgenuebersicht','Mein Tag · Morgenübersicht',15,'personal/briefing');
+const trigger={id:randomUUID(),name:'Geprüfter Sendeauftrag',type:'n8n-nodes-base.webhook',typeVersion:2,position:[0,0],webhookId:randomUUID(),credentials:webhookCredential,parameters:{httpMethod:'POST',path:'personal-ai-os-approved-dispatch',authentication:'headerAuth',responseMode:'lastNode',options:{}}};
+const request=http('Aktuelle Freigabe prüfen und transportieren','outbox/dispatch','={{ JSON.stringify({outboxId: $json.body.outboxId}) }}');
+await writeFile('integrations/n8n/04-freigegebener-versand.json',JSON.stringify({id:'personalAiOsApprovedDispatch',name:'Personal AI OS · Freigegebener Versand',active:false,nodes:[trigger,request],connections:{[trigger.name]:{main:[[{node:request.name,type:'main',index:0}]]}},settings:{executionOrder:'v1',timezone:'Europe/Berlin',saveDataSuccessExecution:'none',saveDataErrorExecution:'none',saveManualExecutions:false},pinData:{},tags:[]},null,2));
+console.log('Five inactive workflows generated. Configure private URL and two Header Auth credentials before activation.');

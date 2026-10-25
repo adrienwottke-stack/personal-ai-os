@@ -1,0 +1,34 @@
+model:
+  provider: openai-codex
+  default: gpt-6-luna
+agent:
+  max_turns: 12
+  agent_cache:
+    max_size: 1
+    idle_ttl_secs: 300
+    memory_high_mb: 350
+    protect_recent: 0
+platform_toolsets:
+  cli: [memory]
+  api_server: [memory]
+  telegram: [memory]
+compression:
+  enabled: false
+fallback_model: null
+auth:
+  adopt_external_logins: false
+platforms:
+  api_server:
+    enabled: true
+    extra:
+      host: 0.0.0.0
+      port: 8642
+mcp_servers:
+  personal_ai_os:
+    url: http://personal-ai-os-assistant-api:3141/api/assistant
+    headers:
+      Authorization: "Bearer ${ASSISTANT_TOKEN}"
+    timeout: 90
+    connect_timeout: 15
+    sampling:
+      enabled: false

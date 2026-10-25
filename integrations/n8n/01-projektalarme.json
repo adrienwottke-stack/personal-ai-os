@@ -1,0 +1,77 @@
+{
+  "id": "personalAiOs01projektalarme",
+  "name": "Personal AI OS · Projektalarme · 15 Minuten",
+  "active": false,
+  "nodes": [
+    {
+      "id": "a3b8eede-7375-4898-867c-ecfa08fd9040",
+      "name": "Zeitplan",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 15
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "c290c79d-43f6-4eb8-a6d9-63e612f9b7cc",
+      "name": "OS-Aufgabe auslösen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        320,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_OS_API_CREDENTIAL_ID",
+          "name": "Personal AI OS · API"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "REPLACE_PRIVATE_OS_URL/api/integrations/gmail/sync",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({executionId: $execution.id, trigger: $execution.mode === \"manual\" ? \"manual\" : \"automatic\"}) }}",
+        "options": {
+          "timeout": 120000
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Zeitplan": {
+      "main": [
+        [
+          {
+            "node": "OS-Aufgabe auslösen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Berlin",
+    "saveDataSuccessExecution": "all",
+    "saveDataErrorExecution": "all",
+    "saveManualExecutions": false
+  },
+  "pinData": {},
+  "tags": []
+}

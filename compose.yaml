@@ -1,0 +1,78 @@
+name: personal-ai-os
+x-log-policy: &log-policy
+  driver: json-file
+  options: {max-size: "10m", max-file: "3"}
+services:
+  db:
+    logging: *log-policy
+    image: postgres:16-bookworm
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ai_os
+      POSTGRES_USER: ai_os
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Dedicated database password required}
+    volumes: ["database:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ai_os -d ai_os"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    mem_limit: 256m
+    cpus: 0.35
+    networks: [private]
+  app:
+    logging: *log-policy
+    image: personal-ai-os-app:${RELEASE_TAG:-local}
+    build: {context: ., target: app}
+    restart: unless-stopped
+    env_file: ["${OS_ENV_FILE:-.env}"]
+    environment: {DATA_DIR: /data}
+    ports: ["127.0.0.1:${OS_PORT:-3341}:3141"]
+    volumes: ["attachments:/data"]
+    depends_on: {db: {condition: service_healthy}}
+    mem_limit: 512m
+    cpus: 0.5
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    networks: [private]
+  worker:
+    logging: *log-policy
+    image: personal-ai-os-worker:${RELEASE_TAG:-local}
+    build: {context: ., target: worker}
+    profiles: [ai]
+    restart: unless-stopped
+    env_file: ["${OS_ENV_FILE:-.env}"]
+    environment: {DATA_DIR: /data, AI_CODEX_HOME: /home/runner/.codex}
+    volumes: ["worker-jobs:/data", "codex-auth:/home/runner/.codex"]
+    depends_on: {db: {condition: service_healthy}}
+    mem_limit: 384m
+    cpus: 0.5
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    networks: [private]
+  operations:
+    logging: *log-policy
+    image: personal-ai-os-operations:${RELEASE_TAG:-local}
+    build: {context: ., target: operations}
+    profiles: [operations]
+    env_file: ["${OS_ENV_FILE:-.env}"]
+    volumes: ["./private/backups:/backups", "attachments:/source-files:ro"]
+    environment: {BACKUP_DIR: /backups, DATA_DIR: /source-files}
+    depends_on: {db: {condition: service_healthy}}
+    mem_limit: 256m
+    cpus: 0.25
+    networks: [private]
+  backup:
+    logging: *log-policy
+    image: personal-ai-os-operations:${RELEASE_TAG:-local}
+    profiles: [backup]
+    restart: unless-stopped
+    env_file: ["${OS_ENV_FILE:-.env}"]
+    environment: {BACKUP_DIR: /backups, BACKUP_ENABLED: "true", DATA_DIR: /source-files}
+    volumes: ["./private/backups:/backups", "attachments:/source-files:ro"]
+    depends_on: {db: {condition: service_healthy}}
+    mem_limit: 256m
+    cpus: 0.2
+    networks: [private]
+volumes: {database: {}, attachments: {}, worker-jobs: {}, codex-auth: {}, backups: {}}
+networks: {private: {}}

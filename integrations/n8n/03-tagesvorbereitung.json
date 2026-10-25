@@ -1,0 +1,77 @@
+{
+  "id": "personalAiOs03tagesvorbereitung",
+  "name": "Personal AI OS · Tagesvorbereitung und Freitagreview",
+  "active": false,
+  "nodes": [
+    {
+      "id": "7ee54069-a767-413c-b6f6-82c0e59e81a6",
+      "name": "Zeitplan",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 15
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "9e464ef1-2d96-4494-823a-b394a7897eeb",
+      "name": "OS-Aufgabe auslösen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        320,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_OS_API_CREDENTIAL_ID",
+          "name": "Personal AI OS · API"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "REPLACE_PRIVATE_OS_URL/api/integrations/schedule/tick",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{}",
+        "options": {
+          "timeout": 120000
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Zeitplan": {
+      "main": [
+        [
+          {
+            "node": "OS-Aufgabe auslösen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Berlin",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveManualExecutions": false
+  },
+  "pinData": {},
+  "tags": []
+}
